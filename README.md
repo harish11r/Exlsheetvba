@@ -1,12 +1,12 @@
-# Exlsheetvba
-
 Sub SummaryOfSheets()
     Dim ws As Worksheet
     Dim summaryWs As Worksheet
     Dim lastRow As Long
-    Dim completedRow As Long
-    Dim pendingRow As Long
-    
+    Dim totalRecords As Long
+    Dim completedCount As Long
+    Dim pendingCount As Long
+    Dim summaryRow As Long
+
     ' Create or clear the summary sheet
     On Error Resume Next
     Set summaryWs = ThisWorkbook.Worksheets("Summary")
@@ -17,36 +17,43 @@ Sub SummaryOfSheets()
         summaryWs.Cells.Clear
     End If
     On Error GoTo 0
-    
+
     ' Headers for the summary sheet
     summaryWs.Range("A1").Value = "Sheet Name"
-    summaryWs.Range("B1").Value = "Row Count"
-    summaryWs.Range("C1").Value = "Status"
-    
-    completedRow = 2
-    pendingRow = 2
-    
+    summaryWs.Range("B1").Value = "Total Records"
+    summaryWs.Range("C1").Value = "Completed"
+    summaryWs.Range("D1").Value = "Pending"
+
+    summaryRow = 2
+
     ' Loop through each sheet and gather information
     For Each ws In ThisWorkbook.Worksheets
         If ws.Name <> "Summary" Then
-            ' Get row count
+            ' Get the last row in the sheet
             lastRow = ws.Cells(ws.Rows.Count, 1).End(xlUp).Row
+            totalRecords = lastRow - 1 ' Exclude header row
             
-            ' Add sheet name and row count to the summary sheet
-            summaryWs.Cells(completedRow, 1).Value = ws.Name
-            summaryWs.Cells(completedRow, 2).Value = lastRow - 1 ' Exclude header row
+            ' Initialize counts for each sheet
+            completedCount = 0
+            pendingCount = 0
             
-            ' Check the status column and categorize rows
+            ' Count completed and pending based on the status column (assumed to be Column C)
             Dim i As Long
             For i = 2 To lastRow
                 If ws.Cells(i, 3).Value = "Completed" Then
-                    summaryWs.Cells(completedRow, 3).Value = "Completed"
-                    completedRow = completedRow + 1
+                    completedCount = completedCount + 1
                 ElseIf ws.Cells(i, 3).Value = "Pending" Then
-                    summaryWs.Cells(pendingRow, 3).Value = "Pending"
-                    pendingRow = pendingRow + 1
+                    pendingCount = pendingCount + 1
                 End If
             Next i
+            
+            ' Add data to the summary sheet
+            summaryWs.Cells(summaryRow, 1).Value = ws.Name
+            summaryWs.Cells(summaryRow, 2).Value = totalRecords
+            summaryWs.Cells(summaryRow, 3).Value = completedCount
+            summaryWs.Cells(summaryRow, 4).Value = pendingCount
+            
+            summaryRow = summaryRow + 1
         End If
     Next ws
     
